@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Компания | Джуманджи</title>
+  {% include 'base_header_settings.html' %}
+</head>
+
+<body>
+  {% include 'base_header.html' %}
+  <main class="container mt-3">
+    <section>
+      <div class="text-center">
+        <img src="https://place-hold.it/130x80" width="130" height="80" alt="">
+      </div>
+      <h1 class="h1 text-center mx-auto mt-0 pt-1" style="font-size: 70px;"><strong>{{company_name}}</strong></h1>
+      <p class="text-center pt-1">Компания,
+        {% if count_vacancies == 1 %} 1 вакансия
+        {% elif count_vacancies >= 2 and count_vacancies < 5 %} {{count_vacancies}} вакансии
+        {% elif count_vacancies == 0 or count_vacancies >= 5 %} {{count_vacancies}} вакансий
+        {% endif %}
+      </p>
+      <div class="row mt-5">
+        <div class="col-12 col-lg-8 offset-lg-2 m-auto">
+          {% include 'list_of_vacancies.html' %}
+        </div>
+      </div>
+    </section>
+  </main>
+  {% include 'base_footer.html' %}
+</body>
+</html>
