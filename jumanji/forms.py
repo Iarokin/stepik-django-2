@@ -36,4 +36,30 @@ class VacancyForm(forms.Form):
     salary_min = forms.IntegerField()
     salary_max = forms.IntegerField()
     published_at = forms.DateField()
-    specialty = forms.ModelChoiceField(models.Specialty.objects.all(), to_field_name='title')
+    specialty = forms.ModelChoiceField(models.Specialty.objects.all(), to_field_name='code')
+
+
+class ResumeForm(forms.Form):
+    status_by_work = (
+        ('NOTFIND','Не ищу работу'),
+        ('GUESS', 'Рассматриваю предложения'),
+        ('FIND', 'Ищу работу'),
+    )
+
+    qualifications = (
+        ('STAGE', 'Стажер'),
+        ('JUNIOR', 'Джуниор'),
+        ('MIDDLE', 'Миддл'),
+        ('SENIOR', 'Синьор'),
+        ('LEAD', 'Лид')
+    )
+
+    name = forms.CharField(max_length=150)
+    surname = forms.CharField(max_length=150)
+    status = forms.ChoiceField(choices=status_by_work)
+    salary = forms.IntegerField()
+    specialty = forms.ModelChoiceField(models.Specialty.objects.all(), to_field_name='code')
+    grade = forms.ChoiceField(choices=qualifications)
+    education = forms.CharField(max_length=500)
+    experience = forms.CharField(max_length=500)
+    portfolio = forms.CharField(max_length=50)

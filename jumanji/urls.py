@@ -26,8 +26,9 @@ urlpatterns = [
     path('mycompany_create', views.create_own_company, name='mycompany_create'),
     path('mycompany/vacancies', views.vacancies_list_mycompany_view, name='mycompany_vacancies'),
     path('mycompany/vacancies/<int:vacancy_id>', views.vacancy_edit_view, name='mycompany_vacancy_edit'),
-    path('mycompany/vacancies/create', views.vacancy_create_view, name='vacancy_generate')
+    path('mycompany/vacancies/create', views.vacancy_create_view, name='vacancy_generate'),
+    path('myresume', views.own_resume, name='myresume'),
+    path('myresume_create', views.resume_create_view, name='myresume_create'),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

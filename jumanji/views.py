@@ -297,6 +297,71 @@ def vacancy_create_view(request):
     else:
         return HttpResponseRedirect(reverse('register'))
 
+def own_resume(request):
+    alert_update = ''
+    specialties = models.Specialty.objects.all()
+    Anonymous = request.user.is_anonymous
+    if Anonymous is False:
+        if request.method == 'POST':
+            resume_form = forms.ResumeForm(request.POST, request.FILES)
+            if resume_form.is_valid():
+                models.Resume.objects.filter(user=User.objects.get(username=request.user).id).update(
+                    name=resume_form['name'].value(),
+                    surname=resume_form['surname'].value(),
+                    status=resume_form['status'].value(),
+                    salary=resume_form['salary'].value(),
+                    specialty=models.Specialty.objects.get(code=resume_form['specialty'].value()),
+                    grade=resume_form['grade'].value(),
+                    education=resume_form['education'].value(),
+                    experience=resume_form['experience'].value(),
+                    portfolio=resume_form['portfolio'].value()
+                )
+                alert_update = 'Ваше резюме обновлено!'
+                resume_by_user = models.Resume.objects.get(user=User.objects.get(username=request.user).id)
+                return render(request, 'resume-edit.html', context={
+                    'resume': resume_by_user,
+                    'form': resume_form,
+                    'alert_update': alert_update,
+                    'specialties': specialties
+                })
+            else:
+                return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        else:
+            try:
+                resume_by_user = models.Resume.objects.get(user=User.objects.get(username=request.user).id)
+                resume_form = forms.ResumeForm()
+                return render(request, 'resume-edit.html', context={
+                    'resume': resume_by_user,
+                    'form': resume_form,
+                    'alert_update': alert_update,
+                    'specialties': specialties
+                })
+            except ObjectDoesNotExist:
+                return render(request, 'resume-create.html')
+    else:
+        return HttpResponseRedirect(reverse('register'))
+
+
+def resume_create_view(request):
+    Anonymous = request.user.is_anonymous
+    if Anonymous is False:
+        resume = models.Resume.objects.create(
+            user=User.objects.get(username=request.user),
+            name=' ',
+            surname=' ',
+            status='NOTFIND',
+            salary=0,
+            specialty=models.Specialty.objects.filter().first(),
+            grade='STAGE',
+            education=' ',
+            experience=' ',
+            portfolio=' '
+        )
+        resume.save()
+        return HttpResponseRedirect(reverse('myresume'))
+    else:
+        return HttpResponseRedirect(reverse('register'))
+
 
 def custom_handler404(request, exception):
     return HttpResponseNotFound('Данной страницы не существует. Попробуйте перейти к другой :).')
