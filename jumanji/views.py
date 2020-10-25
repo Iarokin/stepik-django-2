@@ -1,31 +1,78 @@
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseNotFound, Http404
+from django.http import HttpResponse, HttpResponseNotFound, Http404, HttpResponseRedirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.urls import reverse
+from django.core.exceptions import ObjectDoesNotExist
+from datetime import datetime
 
-from jumanji import models, services, script_database
 
-links = [
-    {"title": "Вакансии", "link": "vacancies"},
-    {"title": "Компании", "link": "companies"},
-]
-StartServer = True
+from jumanji import models, services, forms
 
 
 def main_view(request):
-    global StartServer
-    if StartServer:
-        script_database.generate()
-        StartServer = False
-    specializations = models.Specialty.objects.values()
-    companies = models.Company.objects.values()
+    specializations = models.Specialty.objects.all()
+    companies = models.Company.objects.all()
     count_vacancies_for_all_specializations = services.count_vacancies_for_all_specializations()
     count_vacancies_for_all_companies = services.count_vacancies_for_all_companies()
     return render(request, 'index.html', context={
         'specializations': specializations,
         'companies': companies,
         'count_vacancies_for_all_specializations': count_vacancies_for_all_specializations,
-        'count_vacancies_for_all_companies': count_vacancies_for_all_companies,
-        'links': links
+        'count_vacancies_for_all_companies': count_vacancies_for_all_companies
     })
+
+
+def register_view(request):
+    if request.method == 'POST':
+        register_form = forms.RegisterForm(request.POST)
+        if register_form.is_valid():
+            User.objects.create_user(
+                username=register_form['username'].value(),
+                first_name=register_form['first_name'].value(),
+                last_name=register_form['last_name'].value(),
+                password=register_form['password'].value()
+            )
+            return HttpResponseRedirect('/login')
+        else:
+            raise Http404
+    else:
+        register_form = forms.RegisterForm()
+        return render(request, 'register.html', context={
+            'register_form': register_form
+        })
+
+
+def login_view(request):
+    if request.method == 'POST':
+        login_form = forms.LoginForm(request.POST)
+        if login_form.is_valid():
+            username = login_form['username'].value()
+            password = login_form['password'].value()
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return HttpResponseRedirect('/')
+            else:
+                login_form.add_error('password', 'Incorrect username or password (User does not exist)')
+                return render(request, 'login.html', context={
+                    'login_form': login_form
+                })
+        else:
+            login_form.add_error('password', 'Incorrect username or password')
+            return render(request, 'login.html', context={
+                'login_form': login_form
+            })
+    else:
+        login_form = forms.LoginForm()
+        return render(request, 'login.html', context={
+            'login_form': login_form
+        })
+
+
+def logout_view(request):
+    logout(request)
+    return HttpResponseRedirect('/')
 
 
 def vacancies_of_specialty_view(request, code_specialty):
@@ -34,44 +81,64 @@ def vacancies_of_specialty_view(request, code_specialty):
         raise Http404
     id_specialty = getattr(models.Specialty.objects.get(code=code_specialty), 'id')
     specialty_name = getattr(models.Specialty.objects.get(code=code_specialty), 'title')
-    vacancies = models.Vacancy.objects.filter(specialty=id_specialty).values()
+    vacancies = models.Vacancy.objects.filter(specialty=id_specialty)
     count_vacancies = models.Vacancy.objects.filter(specialty=id_specialty).count()
     return render(request, 'vacancies.html', context={
         'vacancies': vacancies,
         'count_vacancies': count_vacancies,
         'specialty_name': specialty_name,
-        'links': links
     })
 
 
 def vacancy_on_id_view(request, id_vacancy):
-    input_vacancy = models.Vacancy.objects.filter(id=id_vacancy).count()
-    if input_vacancy == 0:
-        raise Http404
-    vacancy = models.Vacancy.objects.get(id=id_vacancy)
-    company = getattr(vacancy, 'company')
-    specialty = getattr(vacancy, 'specialty')
-    return render(request, 'vacancy.html', context={
-        'vacancy': vacancy,
-        'company': company,
-        'specialty': specialty,
-        'links': links
-    })
+    if request.method == 'POST':
+        application_form = forms.ApplicationForm(request.POST)
+        if application_form.is_valid():
+            application = models.Application.objects.create(
+                written_username=application_form['written_username'].value(),
+                written_phone=application_form['written_phone'].value(),
+                written_cover_letter=application_form['written_cover_letter'].value(),
+                vacancy=models.Vacancy.objects.get(id=id_vacancy),
+                user=request.user
+            )
+            application.save()
+            return HttpResponseRedirect(reverse('send', kwargs={'vacancy_id': id_vacancy}))
+        else:
+            return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    else:
+        application_form = forms.ApplicationForm()
+        input_vacancy = models.Vacancy.objects.filter(id=id_vacancy).count()
+        if input_vacancy == 0:
+            raise Http404
+        vacancy = models.Vacancy.objects.get(id=id_vacancy)
+        company = getattr(vacancy, 'company')
+        specialty = getattr(vacancy, 'specialty')
+        return render(request, 'vacancy.html', context={
+            'vacancy': vacancy,
+            'company': company,
+            'specialty': specialty,
+            'form': application_form
+        })
+
+
+def send_view(request, vacancy_id):
+    return render(request, 'sent.html')
 
 
 def all_vacancy_view(request):
-    vacancies = models.Vacancy.objects.all().values()
+    vacancies = models.Vacancy.objects.all()
+    companies = models.Company.objects.all()
     count_vacancies = models.Vacancy.objects.all().count()
     return render(request, 'vacancies.html', context={
         'vacancies': vacancies,
         'count_vacancies': count_vacancies,
         'specialty_name': "Все вакансии",
-        'links': links
+        'companies': companies
     })
 
 
 def all_companies_view(request):
-    companies = models.Company.objects.all().values()
+    companies = models.Company.objects.all()
     count_companies = models.Company.objects.all().count()
     return render(request, 'companies.html', context={
         'companies': companies,
@@ -83,15 +150,152 @@ def company_view(request, id_company):
     input_company = models.Company.objects.filter(id=id_company).count()
     if input_company == 0:
         raise Http404
-    company_name = getattr(models.Company.objects.get(id=id_company), 'name')
-    vacancies = models.Vacancy.objects.filter(company=id_company).values()
+    company = models.Company.objects.get(id=id_company)
+    company_name = models.Company.objects.get(id=id_company).name
+    vacancies = models.Vacancy.objects.filter(company=id_company)
     count_vacancies = models.Vacancy.objects.filter(company=id_company).count()
     return render(request, 'company.html', context={
         'vacancies': vacancies,
         'count_vacancies': count_vacancies,
         'company_name': company_name,
-        'links': links
+        'company': company
     })
+
+
+def own_company(request):
+    alert_update = ''
+    Anonymous = request.user.is_anonymous
+    if Anonymous is False:
+        if request.method == 'POST':
+            company_form = forms.CompanyForm(request.POST, request.FILES)
+            if company_form.is_valid():
+                models.Company.objects.filter(owner_id=User.objects.get(username=request.user).id).update(
+                    name=company_form['name'].value(),
+                    location=company_form['location'].value(),
+                    description=company_form['description'].value(),
+                    employee_count=company_form['employee_count'].value()
+                )
+                alert_update = 'Информация о компании обновлена'
+                company_by_user = models.Company.objects.get(owner_id=User.objects.get(username=request.user).id)
+                return render(request, 'company-edit.html', context={
+                    'company': company_by_user,
+                    'form': company_form,
+                    'alert_update': alert_update
+                })
+            else:
+                return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        else:
+            try:
+                company_by_user = models.Company.objects.get(owner_id=User.objects.get(username=request.user).id)
+                company_form = forms.CompanyForm()
+                return render(request, 'company-edit.html', context={
+                    'company': company_by_user,
+                    'form': company_form,
+                    'alert_update': alert_update
+                })
+            except ObjectDoesNotExist:
+                return render(request, 'company-create.html')
+    else:
+        return HttpResponseRedirect(reverse('register'))
+
+
+def create_own_company(request):
+    Anonymous = request.user.is_anonymous
+    if Anonymous is False:
+        models.Company.objects.create(
+            name=' ',
+            location=' ',
+            logo='logos/place_holder.png',
+            description=' ',
+            employee_count=0,
+            owner=User.objects.get(username=request.user)
+        )
+        return HttpResponseRedirect(reverse('mycompany'))
+    else:
+        return HttpResponseRedirect(reverse('register'))
+
+
+def vacancies_list_mycompany_view(request):
+    Anonymous = request.user.is_anonymous
+    if Anonymous is False:
+        try:
+            company_by_user_id = models.Company.objects.get(owner_id=User.objects.get(username=request.user).id).id
+            vacncies_company_by_user = models.Vacancy.objects.filter(company=company_by_user_id)
+            count_vacncies_company_by_user = models.Vacancy.objects.filter(company=company_by_user_id).count()
+            return render(request, 'vacancy-list.html', context={
+                'vacancies': vacncies_company_by_user,
+                'count_vacancies': count_vacncies_company_by_user
+            })
+        except ObjectDoesNotExist:
+            return HttpResponseRedirect(reverse('mycompany'))
+    else:
+        return HttpResponseRedirect(reverse('register'))
+
+
+def vacancy_edit_view(request, vacancy_id):
+    alert_update = ''
+    specialties = models.Specialty.objects.all()
+    Anonymous = request.user.is_anonymous
+    if Anonymous is False:
+        if request.method == 'POST':
+            vacancy_form = forms.VacancyForm(request.POST)
+            models.Vacancy.objects.filter(id=vacancy_id).update(
+                title=vacancy_form['title'].value(),
+                skills=vacancy_form['skills'].value(),
+                description=vacancy_form['description'].value(),
+                salary_min=vacancy_form['salary_min'].value(),
+                salary_max=vacancy_form['salary_max'].value(),
+                specialty=models.Specialty.objects.get(code=vacancy_form['specialty'].value())
+            )
+            alert_update = 'Информация о вакансии обновлена'
+            applications = models.Application.objects.filter(vacancy=vacancy_id)
+            count_applications = models.Application.objects.filter(vacancy=vacancy_id).count()
+            my_vacancy = models.Vacancy.objects.get(id=vacancy_id)
+            return render(request, 'vacancy-edit.html', context={
+                'vacancy': my_vacancy,
+                'applications': applications,
+                'count_applications': count_applications,
+                'form': vacancy_form,
+                'alert_update': alert_update,
+                'specialties': specialties
+            })
+        else:
+            vacancy_form = forms.VacancyForm()
+            try:
+                my_vacancy = models.Vacancy.objects.get(id=vacancy_id)
+                applications = models.Application.objects.filter(vacancy=vacancy_id)
+                count_applications = models.Application.objects.filter(vacancy=vacancy_id).count()
+                return render(request, 'vacancy-edit.html', context={
+                    'vacancy': my_vacancy,
+                    'applications': applications,
+                    'count_applications': count_applications,
+                    'form': vacancy_form,
+                    'alert_update': alert_update,
+                    'specialties': specialties
+                })
+            except ObjectDoesNotExist:
+                return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    else:
+        return HttpResponseRedirect(reverse('register'))
+
+
+def vacancy_create_view(request):
+    Anonymous = request.user.is_anonymous
+    if Anonymous is False:
+        vacancy = models.Vacancy.objects.create(
+            title=' ',
+            skills=' ',
+            description=' ',
+            salary_min=0,
+            salary_max=0,
+            published_at=datetime.now(tz=None),
+            specialty=models.Specialty.objects.filter().first(),
+            company=models.Company.objects.get(owner_id=User.objects.get(username=request.user).id)
+        )
+        vacancy.save()
+        return HttpResponseRedirect(reverse('mycompany_vacancy_edit', kwargs={'vacancy_id': vacancy.id}))
+    else:
+        return HttpResponseRedirect(reverse('register'))
 
 
 def custom_handler404(request, exception):

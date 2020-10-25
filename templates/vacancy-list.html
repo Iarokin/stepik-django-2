@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Вакансии компании | Джуманджи</title>
+  {% include 'base_header_settings.html' %}
+  <style>
+    body {
+      background-color: #F6F2E6;
+    }
+  </style>
+</head>
+
+<body>
+  {% include 'base_header.html' %}
+
+  <main class="container mt-3 pb-5">
+    <div class="row mt-5">
+      <div class="col-12 col-lg-4">
+        <aside class="pt-3 pb-4 px-4 mb-5 card">
+          <h1 class="h4 pt-2 pb-2">Моя компания</h1>
+          <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+            <a class="nav-link" href="{% url 'mycompany' %}">1. Информация о&nbsp;компании</a>
+            <a class="nav-link active" href="">2. Вакансии</a>
+          </div>
+        </aside>
+      </div>
+      <div class="col-12 col-lg-8">
+        <div class="card">
+          <div class="card-body px-4 pb-4">
+            <section class="tab-pane fade show active">
+              <h2 class="h4 pt-2 pb-3">Вакансии</h2>
+              {% if count_vacancies == 0 %} <p class="alert alert-info" role="alert">У вас пока нет вакансий, но вы можете создать первую!</p>
+              {% elif count_vacancies > 0 %}
+                {% for vacancy in vacancies %}
+                  <div class="card mt-3">
+                    <div class="card-body px-4">
+                      <div class="row align-items-center">
+                        <div class="col-6 col-lg-8">
+                          <a href="{% url 'one_vacancy' vacancy.id %}" class="mb-1">{{vacancy.title}}</a>
+                          <p class="mb-1">
+                            <h2 class="h2 pb-2">{{vacancy.title}}</h2>
+                            <p class="mb-2">{{vacancy.skills}}</p>
+                            <p>{{vacancy.description}}</p>
+                            <p>От {{vacancy.salary_min}} до {{vacancy.salary_max}} руб.</p>
+                            <p class="text-muted pt-1">{{vacancy.published_at}}</p>
+                          </p>
+                        </div>
+                        <div class="col-6 col-lg-4 text-right">
+                          <a href="{% url 'mycompany_vacancy_edit' vacancy.id %}" class="btn btn-outline-info">Изменить</a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% endif %}
+              <a href="{% url 'vacancy_generate' %}" class="btn btn-info mb-2 mt-4">Создать вакансии</a>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+{% include 'base_footer.html' %}
+</body>
+</html>
