@@ -26,6 +26,7 @@ class CompanyForm(forms.Form):
     name = forms.CharField(max_length=25)
     location = forms.CharField(max_length=25)
     description = forms.CharField(max_length=100)
+    logo = forms.FileField()
     employee_count = forms.IntegerField()
 
 
@@ -63,3 +64,7 @@ class ResumeForm(forms.Form):
     education = forms.CharField(max_length=500)
     experience = forms.CharField(max_length=500)
     portfolio = forms.CharField(max_length=50)
+
+
+class SearchForm(forms.Form):
+    search_objects=forms.CharField(max_length=100)

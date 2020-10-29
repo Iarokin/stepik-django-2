@@ -1,14 +1,11 @@
-<!DOCTYPE html>
-<html lang="ru">
+{% extends 'base.html' %}
 
-<head>
-  <meta charset="UTF-8">
+
+  {% block title_block %}
   <title>Компания | Джуманджи</title>
-  {% include 'base_header_settings.html' %}
-</head>
+  {% endblock %}
 
-<body>
-  {% include 'base_header.html' %}
+{% block content %}
   <main class="container mt-3">
     <section>
       <div class="text-center">
@@ -28,6 +25,4 @@
       </div>
     </section>
   </main>
-  {% include 'base_footer.html' %}
-</body>
-</html>
+{% endblock %}

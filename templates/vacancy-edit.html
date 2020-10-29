@@ -1,19 +1,16 @@
-<!DOCTYPE html>
-<html lang="ru">
+{% extends 'base.html' %}
 
-<head>
-  <meta charset="UTF-8">
+
+{% block title_block %}
   <title>Вакансии компании | Джуманджи</title>
-    {% include 'base_header_settings.html' %}
   <style>
     body {
       background-color: #F6F2E6;
     }
   </style>
-</head>
+{% endblock %}
 
-<body>
- {% include 'base_header.html' %}
+{% block content %}
   <main class="container mt-3 pb-5">
     <div class="row mt-5">
       <div class="col-12 col-lg-4">
@@ -99,6 +96,4 @@
       </div>
     </div>
   </main>
-{% include 'base_footer.html' %}
-</body>
-</html>
+{% endblock %}

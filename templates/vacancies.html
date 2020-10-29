@@ -1,14 +1,11 @@
-<!DOCTYPE html>
-<html lang="ru">
+{% extends 'base.html' %}
 
-<head>
-  <meta charset="UTF-8">
+
+{% block title_block %}
   <title>Вакансии | Джуманджи</title>
-  {% include 'base_header_settings.html' %}
-</head>
+{% endblock %}
 
-<body>
-  {% include 'base_header.html' %}
+{% block content %}
   <main class="container mt-3">
     <section>
       <h1 class="h1 text-center mx-auto mt-4 pt-5" style="font-size: 70px;"><strong>{{specialty_name}}</strong></h1>
@@ -25,6 +22,4 @@
       </div>
     </section>
   </main>
-  {% include 'base_footer.html' %}
-</body>
-</html>
+{% endblock %}

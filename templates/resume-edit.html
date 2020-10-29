@@ -1,8 +1,7 @@
-<!DOCTYPE html>
-<html lang="ru">
+{% extends 'base.html' %}
 
-<head>
-  <meta charset="UTF-8">
+
+{% block title_block %}
   <title>Создать резюме | Джуманджи</title>
   {% include 'base_header_settings.html' %}
   <style>
@@ -10,11 +9,9 @@
       background-color: #F6F2E6;
     }
   </style>
-</head>
+{% endblock %}
 
-<body>
-  {% include 'base_header.html' %}
-
+{% block content %}
   <main class="container mt-3 pb-5">
     <section class="col-12 col-lg-6 offset-lg-3 mt-5 card">
       <div class="card-body px-3 pb-4">
@@ -96,6 +93,4 @@
       </div>
     </section>
   </main>
-{% include 'base_footer.html' %}
-</body>
-</html>
+{% endblock %}

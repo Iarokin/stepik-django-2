@@ -8,6 +8,7 @@ from datetime import datetime
 
 
 from jumanji import models, services, forms
+from conf import settings
 
 
 def main_view(request):
@@ -168,22 +169,24 @@ def own_company(request):
     if Anonymous is False:
         if request.method == 'POST':
             company_form = forms.CompanyForm(request.POST, request.FILES)
-            if company_form.is_valid():
-                models.Company.objects.filter(owner_id=User.objects.get(username=request.user).id).update(
+           # if company_form.is_valid():
+            print(request.POST['logo'])
+            models.Company.objects.filter(owner_id=User.objects.get(username=request.user).id).update(
                     name=company_form['name'].value(),
                     location=company_form['location'].value(),
                     description=company_form['description'].value(),
-                    employee_count=company_form['employee_count'].value()
+                    employee_count=company_form['employee_count'].value(),
+                    logo=settings.MEDIA_COMPANY_IMAGE_DIR + '/' + request.POST['logo']
                 )
-                alert_update = 'Информация о компании обновлена'
-                company_by_user = models.Company.objects.get(owner_id=User.objects.get(username=request.user).id)
-                return render(request, 'company-edit.html', context={
+            alert_update = 'Информация о компании обновлена'
+            company_by_user = models.Company.objects.get(owner_id=User.objects.get(username=request.user).id)
+            return render(request, 'company-edit.html', context={
                     'company': company_by_user,
                     'form': company_form,
                     'alert_update': alert_update
                 })
-            else:
-                return HttpResponseRedirect(request.META['HTTP_REFERER'])
+           # else:
+               # return HttpResponseRedirect(request.META['HTTP_REFERER'])
         else:
             try:
                 company_by_user = models.Company.objects.get(owner_id=User.objects.get(username=request.user).id)
@@ -203,10 +206,10 @@ def create_own_company(request):
     Anonymous = request.user.is_anonymous
     if Anonymous is False:
         models.Company.objects.create(
-            name=' ',
-            location=' ',
+            name='',
+            location='',
             logo='logos/place_holder.png',
-            description=' ',
+            description='',
             employee_count=0,
             owner=User.objects.get(username=request.user)
         )
@@ -347,21 +350,20 @@ def resume_create_view(request):
     if Anonymous is False:
         resume = models.Resume.objects.create(
             user=User.objects.get(username=request.user),
-            name=' ',
-            surname=' ',
+            name='',
+            surname='',
             status='NOTFIND',
             salary=0,
             specialty=models.Specialty.objects.filter().first(),
             grade='STAGE',
-            education=' ',
-            experience=' ',
-            portfolio=' '
+            education='',
+            experience='',
+            portfolio=''
         )
         resume.save()
         return HttpResponseRedirect(reverse('myresume'))
     else:
         return HttpResponseRedirect(reverse('register'))
-
 
 def custom_handler404(request, exception):
     return HttpResponseNotFound('Данной страницы не существует. Попробуйте перейти к другой :).')

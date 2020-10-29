@@ -1,13 +1,11 @@
-<!DOCTYPE html>
-<html lang="ru">
+{% extends 'base.html' %}
 
-<head>
+
+{% block title_block %}
   <title>Джуманджи</title>
-  <meta charset="utf-8">
-  {% include 'base_header_settings.html' %}
-</head>
+{% endblock %}
 
-<body>
+{% block content %}
   <main class="container">
     <div class="row">
       <div class="col-8 col-lg-4 offset-2 offset-lg-4">
@@ -36,5 +34,4 @@
       </div>
     </div>
   </main>
-</body>
-</html>
+{% endblock %}

@@ -1,20 +1,16 @@
-<!DOCTYPE html>
-<html lang="ru">
+{% extends 'base.html' %}
 
-<head>
-  <meta charset="UTF-8">
+
+{% block title_block %}
   <title>Моя компания | Джуманджи</title>
-    {% include 'base_header_settings.html' %}
   <style>
     body {
       background-color: #F6F2E6;
     }
   </style>
-</head>
+{% endblock %}
 
-<body>
-  {% include 'base_header.html' %}
-
+{% block content %}
   <main class="container mt-3 pb-5">
     <div class="row mt-5">
       <div class="col-12 col-lg-4">
@@ -46,15 +42,15 @@
                       <label class="mb-2 text-dark" for="id_logo">Логотип</label>
                       <div class="row align-items-center">
                         <div class="col-6">
-                          <img src="media/{{company.logo}}" alt="" style="max-width: 120px;height: auto;">
+                          <img src="media/{{company.logo}}" alt="" style=" max-width: 130px;max-height: 80px;">
                         </div>
                         <div class="col-6" style="position: relative;">
-                         <!-- <div class="input-group-prepend" style="position: absolute; top: 0;right: 15px;">
+                          <div class="input-group-prepend" style="position: absolute; top: 0;right: 15px;">
                             <span class="btn btn-info px-4">Загрузить</span>
                           </div>
                           <div class="custom-file" style="">
                             <input type="file" class="custom-file-input" name="logo" accept="image/*" required id="id_logo" >
-                          </div>-->
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -88,6 +84,4 @@
       </div>
     </div>
   </main>
-  {% include 'base_footer.html' %}
-</body>
-</html>
+{% endblock %}

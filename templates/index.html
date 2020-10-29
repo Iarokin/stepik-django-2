@@ -1,14 +1,11 @@
-<!DOCTYPE html>
-<html lang="ru">
+{% extends 'base.html' %}
 
-<head>
-  <meta charset="UTF-8">
-  <title>Джуманджи</title>
-  {% include 'base_header_settings.html' %}
-</head>
 
-<body>
-  {% include 'base_header.html' %}
+  {% block title_block %}
+    <title>Джуманджи</title>
+  {% endblock %}
+
+{% block content %}
   <main class="container mt-3">
     <section>
       <h1 class="h1 text-center mx-auto mt-4 py-5"><strong>Вакансии для <br>Junior-разработчиков</strong></h1>
@@ -68,8 +65,8 @@
         {% for company in companies %}
         <div class="col-6 col-md-6 col-lg-3">
           <div class="card pt-4 text-center mb-4">
-            <a href="#" style="max-width: 150px;" class="mx-auto d-block">
-              <img class="mx-auto d-block mw-100" src="{{company.logo.url}}" alt="">
+            <a style="max-width: 150px;" class="mx-auto d-block">
+              <img class="mx-auto d-block mw-100" src="{{company.logo.url}}" height="80" weight="130" alt="">
             </a>
             <div class="card-body">
               <p class="card-text">
@@ -91,6 +88,4 @@
       </div>
     </section>
   </main>
-  {% include 'base_footer.html' %}
-</body>
-</html>
+{% endblock %}
