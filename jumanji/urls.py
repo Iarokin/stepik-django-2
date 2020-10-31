@@ -29,6 +29,7 @@ urlpatterns = [
     path('mycompany/vacancies/create', views.vacancy_create_view, name='vacancy_generate'),
     path('myresume', views.own_resume, name='myresume'),
     path('myresume_create', views.resume_create_view, name='myresume_create'),
+    path('search?s=<str:query>', views.search_view, name='search')
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

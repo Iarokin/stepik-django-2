@@ -15,9 +15,11 @@
             <h1 class="h3 mb-3 font-weight-normal">Джуманджи</h1>
             <p class="h5 font-weight-light">Создайте аккаунт</p>
           </div>
+          {% if alert_text != '' %} <p class="alert alert-info" role="alert">{{alert_text}}</p> {% endif %}
           <div class="mt-5 form-label-group">
             <p class="text-muted">Логин</p>
             <input type="text" name="username" maxlength="150" required id="id_username" class="form-control">
+            <p>Обязательное. Максимальная длина 150 символов. Буквы, цифры и @/./+/-/_</p>
             <label for="id_username"></label>
           </div>
 
@@ -36,6 +38,9 @@
           <div class="form-label-group">
             <p class="text-muted"> Пароль</p>
             <input type="password" name="password" required id="id_password" class="form-control">
+            <p>Пароль не должен быть схожим с другой персональной информацией</p>
+            <p>Пароль должен быть длиной не менее 8 символов</p>
+            <p>Пароль не должен быть слишком простым</p>
             <label for="id_password"></label>
           </div>
 

@@ -35,9 +35,10 @@ class Application(models.Model):
     vacancy = models.ForeignKey(Vacancy, on_delete=models.CASCADE, related_name="applications")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="applications")
 
+
 class Resume(models.Model):
     status_by_work = (
-        ('NOTFIND','Не ищу работу'),
+        ('NOTFIND', 'Не ищу работу'),
         ('GUESS', 'Рассматриваю предложения'),
         ('FIND', 'Ищу работу'),
     )
@@ -50,7 +51,7 @@ class Resume(models.Model):
         ('LEAD', 'Лид')
     )
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="resumes")
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="resumes")
     name = models.CharField(max_length=150)
     surname = models.CharField(max_length=150)
     status = models.CharField(choices=status_by_work, default='NOTFIND', max_length=25)
@@ -60,4 +61,3 @@ class Resume(models.Model):
     education = models.CharField(max_length=500)
     experience = models.CharField(max_length=500)
     portfolio = models.CharField(max_length=50)
-

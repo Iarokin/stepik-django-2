@@ -42,7 +42,7 @@ class VacancyForm(forms.Form):
 
 class ResumeForm(forms.Form):
     status_by_work = (
-        ('NOTFIND','Не ищу работу'),
+        ('NOTFIND', 'Не ищу работу'),
         ('GUESS', 'Рассматриваю предложения'),
         ('FIND', 'Ищу работу'),
     )
@@ -67,4 +67,4 @@ class ResumeForm(forms.Form):
 
 
 class SearchForm(forms.Form):
-    search_objects=forms.CharField(max_length=100)
+    search_objects = forms.CharField(max_length=100)

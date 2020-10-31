@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 from datetime import datetime
 
 
@@ -12,19 +13,25 @@ from conf import settings
 
 
 def main_view(request):
-    specializations = models.Specialty.objects.all()
-    companies = models.Company.objects.all()
-    count_vacancies_for_all_specializations = services.count_vacancies_for_all_specializations()
-    count_vacancies_for_all_companies = services.count_vacancies_for_all_companies()
-    return render(request, 'index.html', context={
-        'specializations': specializations,
-        'companies': companies,
-        'count_vacancies_for_all_specializations': count_vacancies_for_all_specializations,
-        'count_vacancies_for_all_companies': count_vacancies_for_all_companies
-    })
+    if request.method == 'POST':
+        return HttpResponseRedirect(reverse('search', kwargs={'query': request.POST['search_object']}))
+    else:
+        search_form = forms.SearchForm()
+        specializations = models.Specialty.objects.all()
+        companies = models.Company.objects.all()
+        count_vacancies_for_all_specializations = services.count_vacancies_for_all_specializations()
+        count_vacancies_for_all_companies = services.count_vacancies_for_all_companies()
+        return render(request, 'index.html', context={
+            'specializations': specializations,
+            'companies': companies,
+            'count_vacancies_for_all_specializations': count_vacancies_for_all_specializations,
+            'count_vacancies_for_all_companies': count_vacancies_for_all_companies,
+            'form': search_form
+        })
 
 
 def register_view(request):
+    alert_text = ''
     if request.method == 'POST':
         register_form = forms.RegisterForm(request.POST)
         if register_form.is_valid():
@@ -36,15 +43,22 @@ def register_view(request):
             )
             return HttpResponseRedirect('/login')
         else:
-            raise Http404
+            alert_text = "Использованы недопустимые данные в логине или пароле"
+            register_form = forms.RegisterForm()
+            return render(request, 'register.html', context={
+                'register_form': register_form,
+                'alert_text': alert_text
+            })
     else:
         register_form = forms.RegisterForm()
         return render(request, 'register.html', context={
-            'register_form': register_form
+            'register_form': register_form,
+            'alert_text': alert_text
         })
 
 
 def login_view(request):
+    alert_text = ''
     if request.method == 'POST':
         login_form = forms.LoginForm(request.POST)
         if login_form.is_valid():
@@ -55,19 +69,22 @@ def login_view(request):
                 login(request, user)
                 return HttpResponseRedirect('/')
             else:
-                login_form.add_error('password', 'Incorrect username or password (User does not exist)')
+                alert_text = 'Неверный логин или пароль'
                 return render(request, 'login.html', context={
-                    'login_form': login_form
+                    'login_form': login_form,
+                    'alert_text': alert_text
                 })
         else:
-            login_form.add_error('password', 'Incorrect username or password')
+            alert_text = 'Неверный логин или пароль'
             return render(request, 'login.html', context={
-                'login_form': login_form
+                'login_form': login_form,
+                'alert_text': alert_text
             })
     else:
         login_form = forms.LoginForm()
         return render(request, 'login.html', context={
-            'login_form': login_form
+            'login_form': login_form,
+            'alert_text': alert_text
         })
 
 
@@ -169,24 +186,21 @@ def own_company(request):
     if Anonymous is False:
         if request.method == 'POST':
             company_form = forms.CompanyForm(request.POST, request.FILES)
-           # if company_form.is_valid():
             print(request.POST['logo'])
             models.Company.objects.filter(owner_id=User.objects.get(username=request.user).id).update(
-                    name=company_form['name'].value(),
-                    location=company_form['location'].value(),
-                    description=company_form['description'].value(),
-                    employee_count=company_form['employee_count'].value(),
-                    logo=settings.MEDIA_COMPANY_IMAGE_DIR + '/' + request.POST['logo']
-                )
+                name=company_form['name'].value(),
+                location=company_form['location'].value(),
+                description=company_form['description'].value(),
+                employee_count=company_form['employee_count'].value(),
+                logo=settings.MEDIA_COMPANY_IMAGE_DIR + '/' + request.POST['logo']
+            )
             alert_update = 'Информация о компании обновлена'
             company_by_user = models.Company.objects.get(owner_id=User.objects.get(username=request.user).id)
             return render(request, 'company-edit.html', context={
-                    'company': company_by_user,
-                    'form': company_form,
-                    'alert_update': alert_update
-                })
-           # else:
-               # return HttpResponseRedirect(request.META['HTTP_REFERER'])
+                'company': company_by_user,
+                'form': company_form,
+                'alert_update': alert_update
+            })
         else:
             try:
                 company_by_user = models.Company.objects.get(owner_id=User.objects.get(username=request.user).id)
@@ -300,6 +314,7 @@ def vacancy_create_view(request):
     else:
         return HttpResponseRedirect(reverse('register'))
 
+
 def own_resume(request):
     alert_update = ''
     specialties = models.Specialty.objects.all()
@@ -364,6 +379,31 @@ def resume_create_view(request):
         return HttpResponseRedirect(reverse('myresume'))
     else:
         return HttpResponseRedirect(reverse('register'))
+
+
+def search_view(request, query):
+    if request.method == 'POST':
+        return HttpResponseRedirect(reverse('search', kwargs={'query': request.POST['search_object']}))
+    search_result = models.Vacancy.objects.filter(
+        Q(
+            title__icontains=query
+        ) | Q(
+            skills__icontains=query
+        ) | Q(
+            description__icontains=query
+        ) | Q(
+            specialty__title__icontains=query
+        ) | Q(
+            company__name__icontains=query
+        )
+    )
+    count_search_result = search_result.count
+    return render(request, 'search.html', context={
+        'vacancies': search_result,
+        'count_vacancies': count_search_result,
+        'query_search_words': query
+    })
+
 
 def custom_handler404(request, exception):
     return HttpResponseNotFound('Данной страницы не существует. Попробуйте перейти к другой :).')
